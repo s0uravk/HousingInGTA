@@ -1,0 +1,68 @@
+/* General styles for the body */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #fafcfd; /* Light Alice Blue background */
+  }
+  
+  /* Container styling */
+  .container {
+    width: 90%;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  /* Header styling */
+  .row > div {
+    font-size: 2em;
+    font-weight: bold;
+    text-align: center;
+    color: #333; /* Darker text color for contrast */
+    margin-bottom: 20px;
+  }
+  
+  /* Centering and styling for dropdowns */
+  .row > div select {
+    display: inline-block;
+    margin: 0 15px;
+    padding: 5px;
+    font-size: 0.5em;
+    border: 2px solid #93c2f1; /* Blue border */
+    border-radius: 5px;
+    background-color: #fff;
+    color: #333;
+    width: 200px;
+  }
+  
+  /* Dropdown focus styling */
+  select:focus {
+    border-color: #93c2f1; /* Darker blue on focus */
+    outline: none;
+  }
+  
+  /* Map container styling */
+  #barChart {
+    height: 500px;
+    width: 100%;
+    border: 2px solid #93c2f1; /* Blue border */
+    border-radius: 5px;
+    margin-top: 20px;
+  }
+  
+  /* Responsive design adjustments */
+  @media (max-width: 768px) {
+    .container {
+      width: 100%;
+      padding: 10px;
+    }
+  
+    #barChart {
+      height: 300px;
+    }
+  
+    .row > div select {
+      margin: 10px 5px;
+    }
+  }
+  

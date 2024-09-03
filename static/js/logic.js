@@ -1,6 +1,7 @@
-// Global variables to store features and chart instance
+// Global variables to store features and chart instances
 let features = [];
-let barChart = null;
+let barChartStarts = null;
+let barChartCompletions = null;
 
 // Initialization Function
 function init() {
@@ -10,7 +11,7 @@ function init() {
     console.log(response);
     features = response.features;
     populateDropdowns(features);
-    updateChart();
+    updateCharts();
   }).catch(error => console.error('Error fetching data:', error));
 }
 
@@ -45,59 +46,114 @@ function populateDropdowns(features) {
   });
 }
 
-function updateChart() {
+function updateCharts() {
   let selectedYear = d3.select('#selYear').property('value');
   let selectedMunicipality = d3.select('#selMunc').property('value');
 
-  // Filter data based on selected values
   let filteredData = features.filter(d =>
     (selectedYear === '' || d.properties.Year == selectedYear) &&
     (selectedMunicipality === '' || d.properties.Municipality === selectedMunicipality)
   );
 
-  // Aggregate data by type of housing
-  let housingTypes = ['Starts_Singles', 'Starts_Semi', 'Starts_Row', 'Starts_Apartments'];
-  let aggregatedData = {};
+  console.log('Filtered Data:', filteredData); // Check the structure of filtered data
 
-  // Initialize aggregatedData for each type
+  let housingTypes = ['Starts_Singles', 'Starts_Semi', 'Starts_Row', 'Starts_Apartments'];
+  let completionHousingTypes = ['Completions_Single', 'Completions_Semi', 'Completions_Row', 'Completions_Apartments'];
+
+  let aggregatedDataStarts = {};
+  let aggregatedDataCompletions = {};
+
   housingTypes.forEach(type => {
-    aggregatedData[type] = 0;
+    aggregatedDataStarts[type] = 0;
+  });
+
+  completionHousingTypes.forEach(type => {
+    aggregatedDataCompletions[type] = 0;
   });
 
   filteredData.forEach(d => {
     housingTypes.forEach(type => {
-      aggregatedData[type] += d.properties[type] || 0;
+      aggregatedDataStarts[type] += d.properties[type] || 0;
+    });
+    completionHousingTypes.forEach(type => {
+      if (d.properties.hasOwnProperty(type)) {
+        aggregatedDataCompletions[type] += d.properties[type] || 0;
+      }
     });
   });
 
-  // Prepare data for Chart.js
-  let labels = housingTypes;
-  let values = housingTypes.map(type => aggregatedData[type]);
+  console.log('Aggregated Data Starts:', aggregatedDataStarts); // Check aggregated data
+  console.log('Aggregated Data Completions:', aggregatedDataCompletions); // Check aggregated data
 
-  // Destroy the previous chart if it exists
-  if (barChart) {
-    barChart.destroy();
+  let labelsStarts = housingTypes; // Use field names directly
+  let valuesStarts = housingTypes.map(type => aggregatedDataStarts[type]);
+
+  let labelsCompletions = completionHousingTypes; // Use field names directly
+  let valuesCompletions = completionHousingTypes.map(type => aggregatedDataCompletions[type]);
+
+  // Destroy existing charts if they exist
+  if (barChartStarts) {
+    barChartStarts.destroy();
+  }
+  if (barChartCompletions) {
+    barChartCompletions.destroy();
   }
 
-  // Create a new bar chart
-  let ctx = document.getElementById('barChart').getContext('2d');
-  barChart = new Chart(ctx, {
+  // Create the Housing Starts chart
+  let ctxStarts = d3.select('#barChartStarts').node().getContext('2d');
+  barChartStarts = new Chart(ctxStarts, {
     type: 'bar',
     data: {
-      labels: labels,
+      labels: labelsStarts,
       datasets: [{
         label: 'Housing Starts by Type',
-        data: values,
+        data: valuesStarts,
         backgroundColor: [
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)',
           'rgba(255, 99, 132, 0.2)',
-          'rgba(54, 162, 235, 0.2)',
-          'rgba(255, 206, 86, 0.2)',
           'rgba(75, 192, 192, 0.2)'
         ],
         borderColor: [
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
           'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        x: {
+          beginAtZero: true
+        },
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  // Create the Housing Completions chart
+  let ctxCompletions = d3.select('#barChartCompletions').node().getContext('2d');
+  barChartCompletions = new Chart(ctxCompletions, {
+    type: 'bar',
+    data: {
+      labels: labelsCompletions,
+      datasets: [{
+        label: 'Completed Housing by Type',
+        data: valuesCompletions,
+        backgroundColor: [
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)',
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(75, 192, 192, 0.2)'
+        ],
+        borderColor: [
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(255, 99, 132, 1)',
           'rgba(75, 192, 192, 1)'
         ],
         borderWidth: 1
@@ -118,7 +174,7 @@ function updateChart() {
 
 // Function to handle dropdown changes
 function optionChanged() {
-  updateChart();
+  updateCharts();
 }
 
 // Initialize the page
