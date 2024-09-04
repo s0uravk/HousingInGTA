@@ -84,3 +84,7 @@ footer a {
 footer a:hover {
   text-decoration: underline;
 }
+#map {
+  height: 500px; /* Ensure the map has a height */
+  width: 100%;
+}

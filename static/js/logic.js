@@ -2,19 +2,19 @@
 let features = [];
 let barChartStarts = null;
 let barChartCompletions = null;
+let map; // Variable to hold the Leaflet map instance
+let mapMarkers = []; // Initialize the mapMarkers array
 
 // Initialization Function
 function init() {
   let url = "https://services6.arcgis.com/ONZht79c8QWuX759/arcgis/rest/services/HousingConstructionActivity/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson";
 
   d3.json(url).then(response => {
-    console.log(response);
     features = response.features;
     populateDropdowns(features);
     updateCharts();
-    document.addEventListener('DOMContentLoaded', (event) => {
+    // Call updateMap after data is loaded
     updateMap();
-    });
   }).catch(error => console.error('Error fetching data:', error));
 }
 
@@ -57,10 +57,6 @@ function populateDropdowns(features) {
   });
 }
 
-//Global variables
-let mapMarkers = []; // Initialize the mapMarkers array
-//let map; // Assuming your Leaflet map is initialized elsewhere
-
 // Function to update charts and map
 function updateCharts() {
   let selectedYear = d3.select('#selYear').property('value');
@@ -75,9 +71,6 @@ function updateCharts() {
 
   // Filter data for the map, excluding "GTA_total"
   let filteredDataForMap = filteredDataForCharts.filter(d => d.properties.Municipality !== "GTA_total");
-
-  console.log('Filtered Data for Charts:', filteredDataForCharts); // Check the structure of filtered data
-  console.log('Filtered Data for Map:', filteredDataForMap); // Check the structure of filtered map data
 
   let housingTypes = ['Starts_Singles', 'Starts_Semi', 'Starts_Row', 'Starts_Apartments'];
   let completionHousingTypes = ['Completions_Single', 'Completions_Semi', 'Completions_Row', 'Completions_Apartments'];
@@ -103,9 +96,6 @@ function updateCharts() {
       }
     });
   });
-
-  console.log('Aggregated Data Starts:', aggregatedDataStarts); // Check aggregated data
-  console.log('Aggregated Data Completions:', aggregatedDataCompletions); // Check aggregated data
 
   let labelsStarts = housingTypes; // Use field names directly
   let valuesStarts = housingTypes.map(type => aggregatedDataStarts[type]);
@@ -192,26 +182,55 @@ function updateCharts() {
       }
     }
   });
+
+  // Update Leaflet map with markers based on the selected year
+  updateMap();
 }
-
-
 
 // Function to initialize or update the map with markers
 function updateMap() {
+  // Check if map is already initialized
+  if (!map) {
+    // Initialize the map
+    map = L.map("map", {
+      center: [38.8264999, -100.8526688],
+      zoom: 5
+    });
+
+    // Add a base layer to the map
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+  }
+
+  // Clear existing markers
+  mapMarkers.forEach(marker => map.removeLayer(marker));
+  mapMarkers = [];
+
   // Get the selected year from the dropdown
   let selectedYearMap = d3.select('#selYearMap').property('value');
 
-  // BUILD MY MAP 
-  let myMap = L.map("map", {
-    center: [38.8264999, -100.8526688],
-    zoom:  5
-    });
+  // Filter data for the selected year
+  let filteredDataForMap = features.filter(d =>
+    d.properties.Year == selectedYearMap &&
+    d.properties.Municipality !== "GTA_total"
+  );
 
-  //BASE MAPS
-  let street = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(myMap)
+  // Add new markers
+  filteredDataForMap.forEach(d => {
+    let lat = d.geometry.coordinates[1];
+    let lng = d.geometry.coordinates[0];
+    let marker = L.circle([lat, lng], {
+      color: 'blue',
+      fillColor: '#30f',
+      fillOpacity: 0.5,
+      radius: 1000 * (d.properties.Starts_Singles || 0) // Example for size
+    }).addTo(map);
+
+    // Add to mapMarkers array
+    mapMarkers.push(marker);
+  });
 }
 
 // Function to handle dropdown changes
