@@ -30,9 +30,17 @@ function populateDropdowns(features) {
 
   d3.select('#selYear').selectAll('option').remove();
   d3.select('#selMunc').selectAll('option').remove();
+  d3.select('#selYearMap').selectAll('option').remove();
 
   sortedYears.forEach(year => {
     d3.select('#selYear')
+      .append('option')
+      .text(year)
+      .attr('value', year);
+  });
+
+  sortedYears.forEach(year => {
+    d3.select('#selYearMap')
       .append('option')
       .text(year)
       .attr('value', year);
@@ -49,6 +57,7 @@ function populateDropdowns(features) {
 function updateCharts() {
   let selectedYear = d3.select('#selYear').property('value');
   let selectedMunicipality = d3.select('#selMunc').property('value');
+  let selectedYearMap = d3.select('#selYearMap').property('value');
 
   let filteredData = features.filter(d =>
     (selectedYear === '' || d.properties.Year == selectedYear) &&
@@ -170,6 +179,8 @@ function updateCharts() {
       }
     }
   });
+
+
 }
 
 // Function to handle dropdown changes
