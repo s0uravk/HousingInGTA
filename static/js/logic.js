@@ -12,6 +12,9 @@ function init() {
     features = response.features;
     populateDropdowns(features);
     updateCharts();
+    document.addEventListener('DOMContentLoaded', (event) => {
+    updateMap();
+    });
   }).catch(error => console.error('Error fetching data:', error));
 }
 
@@ -54,17 +57,27 @@ function populateDropdowns(features) {
   });
 }
 
+//Global variables
+let mapMarkers = []; // Initialize the mapMarkers array
+//let map; // Assuming your Leaflet map is initialized elsewhere
+
+// Function to update charts and map
 function updateCharts() {
   let selectedYear = d3.select('#selYear').property('value');
   let selectedMunicipality = d3.select('#selMunc').property('value');
   let selectedYearMap = d3.select('#selYearMap').property('value');
 
-  let filteredData = features.filter(d =>
+  // Filter data for charts, including "GTA_total"
+  let filteredDataForCharts = features.filter(d =>
     (selectedYear === '' || d.properties.Year == selectedYear) &&
     (selectedMunicipality === '' || d.properties.Municipality === selectedMunicipality)
   );
 
-  console.log('Filtered Data:', filteredData); // Check the structure of filtered data
+  // Filter data for the map, excluding "GTA_total"
+  let filteredDataForMap = filteredDataForCharts.filter(d => d.properties.Municipality !== "GTA_total");
+
+  console.log('Filtered Data for Charts:', filteredDataForCharts); // Check the structure of filtered data
+  console.log('Filtered Data for Map:', filteredDataForMap); // Check the structure of filtered map data
 
   let housingTypes = ['Starts_Singles', 'Starts_Semi', 'Starts_Row', 'Starts_Apartments'];
   let completionHousingTypes = ['Completions_Single', 'Completions_Semi', 'Completions_Row', 'Completions_Apartments'];
@@ -80,7 +93,7 @@ function updateCharts() {
     aggregatedDataCompletions[type] = 0;
   });
 
-  filteredData.forEach(d => {
+  filteredDataForCharts.forEach(d => {
     housingTypes.forEach(type => {
       aggregatedDataStarts[type] += d.properties[type] || 0;
     });
@@ -179,8 +192,26 @@ function updateCharts() {
       }
     }
   });
+}
 
 
+
+// Function to initialize or update the map with markers
+function updateMap() {
+  // Get the selected year from the dropdown
+  let selectedYearMap = d3.select('#selYearMap').property('value');
+
+  // BUILD MY MAP 
+  let myMap = L.map("map", {
+    center: [38.8264999, -100.8526688],
+    zoom:  5
+    });
+
+  //BASE MAPS
+  let street = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(myMap)
 }
 
 // Function to handle dropdown changes
