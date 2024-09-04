@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="shortcut icon" type="image/png" href="../static/images/favicon.png">
+  <!-- <link rel="shortcut icon" type="image/png" href="../static/images/favicon.png"> -->
   <title>Housing Market in GTA</title>
   
   <!-- D3 library -->
@@ -24,10 +24,13 @@
 
   <!-- Chart JS -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body>
+
   <div class="container">    
+
     <div class="row">
       <div class="col text-center">
         <h1>Housing Market in GTA (Since 2019)</h1>
@@ -61,23 +64,24 @@
       <div class="col text-center">
         <select id='selYearMap' class='selectCSS' onchange="optionChanged()">
           <option value="">Select Year</option>
+        </select>
       </div>
     </div>
-    
-    <!-- The div that holds our map -->
-    <div id="map"></div>
 
+    <div class="row">
+      <!-- The div that holds our map -->
+      <div id="naksha">There  Should be a Map</div>
+    </div>
 
-    
-  </div>
 
    <!-- Footer with reference to data source -->
   <footer class="text-center mt-5 mb-3">
       <p>Data source: <a href="https://data.peelregion.ca/datasets/e033d8646c76409b925a0538478ebff9_0/explore" target="_blank">Peel Region Housing Construction Data</a>. Peel Region, Canada.</p>
   </footer>
   
-  <!-- Our JavaScript files -->  
-  <script src="static/js/logic.js"></script>
+    <!-- Our JavaScript files -->  
+    <script src="static/js/logic.js"></script>
+
 </body>
 
 </html>

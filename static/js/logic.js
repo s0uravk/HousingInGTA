@@ -182,60 +182,32 @@ function updateCharts() {
       }
     }
   });
-
-  // Update Leaflet map with markers based on the selected year
-  updateMap();
 }
 
-// Function to initialize or update the map with markers
+
+
 function updateMap() {
-  // Check if map is already initialized
+  console.log('updateMap called');
   if (!map) {
-    // Initialize the map
-    map = L.map("map", {
-      center: [38.8264999, -100.8526688],
-      zoom: 5
+    map = L.map("naksha", {
+      center: [43.7, -79.42], // Coordinates for the GTA area
+      zoom: 10
     });
 
-    // Add a base layer to the map
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
   }
-
-  // Clear existing markers
-  mapMarkers.forEach(marker => map.removeLayer(marker));
-  mapMarkers = [];
-
-  // Get the selected year from the dropdown
-  let selectedYearMap = d3.select('#selYearMap').property('value');
-
-  // Filter data for the selected year
-  let filteredDataForMap = features.filter(d =>
-    d.properties.Year == selectedYearMap &&
-    d.properties.Municipality !== "GTA_total"
-  );
-
-  // Add new markers
-  filteredDataForMap.forEach(d => {
-    let lat = d.geometry.coordinates[1];
-    let lng = d.geometry.coordinates[0];
-    let marker = L.circle([lat, lng], {
-      color: 'blue',
-      fillColor: '#30f',
-      fillOpacity: 0.5,
-      radius: 1000 * (d.properties.Starts_Singles || 0) // Example for size
-    }).addTo(map);
-
-    // Add to mapMarkers array
-    mapMarkers.push(marker);
-  });
 }
+
+
+
 
 // Function to handle dropdown changes
 function optionChanged() {
   updateCharts();
+  updateMap();
 }
 
 // Initialize the page

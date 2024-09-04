@@ -84,7 +84,10 @@ footer a {
 footer a:hover {
   text-decoration: underline;
 }
-#map {
-  height: 500px; /* Ensure the map has a height */
+#naksha {
+  height: 500px;
   width: 100%;
+  border: 2px solid #93c2f1; /* Blue border */
+  border-radius: 5px;
+  margin-top: 20px;
 }
