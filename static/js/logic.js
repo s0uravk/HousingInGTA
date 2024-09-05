@@ -4,6 +4,8 @@ let barChartStarts = null;
 let barChartCompletions = null;
 let map; // Variable to hold the Leaflet map instance
 let mapMarkers = []; // Initialize the mapMarkers array
+let uniqueYears = new Set();
+let uniqueMunicipalities = new Set();
 
 // Initialization Function
 function init() {
@@ -15,13 +17,12 @@ function init() {
     updateCharts();
     // Call updateMap after data is loaded
     updateMap();
+    processFeatures(features);
   }).catch(error => console.error('Error fetching data:', error));
 }
 
 // Function to populate dropdowns
 function populateDropdowns(features) {
-  let uniqueYears = new Set();
-  let uniqueMunicipalities = new Set();
 
   features.forEach(element => {
     uniqueYears.add(element.properties.Year);
@@ -182,14 +183,70 @@ function updateCharts() {
       }
     }
   });
+};
+ // Initialize an empty object to store city coordinates
+let cityCoordinates = {};
+
+// Function to fetch coordinates for each city
+async function fetchCityCoordinates(uniqueMunicipalities) {
+  let fetchPromises = uniqueMunicipalities.map(async city => {
+    let url = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&limit=1`;
+    try {
+      let data = await d3.json(url);
+      // console.log(`API response for ${city}:`, data); // Log API response
+      if (data.length > 0) {
+        cityCoordinates[city] = {
+          lat: parseFloat(data[0].lat),
+          lon: parseFloat(data[0].lon)
+        };
+      } else {
+        console.warn(`No coordinates found for city: ${city}`);
+      }
+    } catch (error) {
+      console.error('Error fetching coordinates:', error);
+    }
+  });
+
+  await Promise.all(fetchPromises);
 }
 
+// Function to add coordinates to the JSON data
+function updateFeaturesWithCoordinates(features) {
+  features.forEach(item => {
+    let city = item.properties.Municipality;
+    if (cityCoordinates[city]) {
+      item.geometry = {
+        type: "Point",
+        coordinates: [cityCoordinates[city].lon, cityCoordinates[city].lat]
+      };
+    }
+  });
+}
 
+// Example usage
+async function processFeatures(features) {
+  let uniqueMunicipalities = [...new Set(features.map(f => f.properties.Municipality))];
+  await fetchCityCoordinates(uniqueMunicipalities);
+  updateFeaturesWithCoordinates(features);
+}
+
+processFeatures(features);
+
+function getColorBasedOnCompletion(completionTotal) {
+  // Define your color scale based on completion totals
+  if (completionTotal > 1000) return 'red';
+  if (completionTotal > 500) return 'orange';
+  return 'green';
+}
 
 function updateMap() {
   console.log('updateMap called');
+
+  // Get the selected year from the dropdown
+  let selectedYear = d3.select('#selYearMap').property('value');
+
   if (!map) {
-    map = L.map("naksha", {
+    map = L.map("map", {
       center: [43.7, -79.42], // Coordinates for the GTA area
       zoom: 10
     });
@@ -199,9 +256,57 @@ function updateMap() {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
   }
+
+  // Filter features based on the selected year
+  let filteredFeatures = features.filter(feature => {
+    return selectedYear === '' || String(feature.properties.Year) === String(selectedYear);
+  });
+
+  // Remove existing layers
+  if (map.hasLayer(mapMarkers)) {
+    map.removeLayer(mapMarkers);
+  }
+
+
+
+  function onEachFeature(feature, layer) {
+    layer.bindPopup(`<b>Municipality:</b> ${feature.properties.Municipality}<br>
+                     <b>Starts Total:</b> ${feature.properties.Starts_Total}<br>
+                     <b>Completions Total:</b> ${feature.properties.Completions_Total}`);
+  }
+
+  // Add filtered features to the map
+  mapMarkers = L.geoJSON(filteredFeatures, {
+    pointToLayer: function (feature, latlng) {
+      return L.circleMarker(latlng, styleFeature(feature));
+    },
+    onEachFeature: onEachFeature
+  }).addTo(map);
+
+  // Update legend
+  updateLegend();
 }
 
+// Function to update the legend based on color scale
+function updateLegend() {
+  let legend = L.control({position: 'bottomright'});
 
+  legend.onAdd = function () {
+    let div = L.DomUtil.create('div', 'info legend');
+    let grades = [0, 500, 1000];
+    let labels = ['< 500', '500 - 1000', '> 1000'];
+
+    for (let i = 0; i < grades.length; i++) {
+      div.innerHTML +=
+        '<i style="background:' + getColorBasedOnCompletion(grades[i] + 1) + '"></i> ' +
+        labels[i] + '<br>';
+    }
+
+    return div;
+  };
+
+  legend.addTo(map);
+};
 
 
 // Function to handle dropdown changes
