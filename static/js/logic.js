@@ -279,8 +279,9 @@ function updateCharts() {
       
     },
     onEachFeature: function (feature, layer) {
-      layer.bindPopup(`<h3>Municipality:</h3> ${feature.properties.Municipality}<h3>
-                       <h3>Starts Total:</h3> ${feature.properties.Starts_Total}<h3>`);
+      layer.bindPopup(`<h5>Municipality:</h5> ${feature.properties.Municipality}<h5>
+                       <h5>Starts Total:</h5> ${feature.properties.Starts_Total}<h5>
+                       <h5>Year : </h5> ${feature.properties.Year}<h5>`);
     }
   });
 
@@ -298,8 +299,9 @@ function updateCharts() {
       });
     },
     onEachFeature: function (feature, layer) {
-      layer.bindPopup(`<h3>Municipality:</h3> ${feature.properties.Municipality}<h3>
-                       <h3>Completions Total:</h3> ${feature.properties.Completions_Total}<h3>`);
+      layer.bindPopup(`<h5>Municipality:</h5> ${feature.properties.Municipality}<h5>
+                       <h5>Completions Total:</h5> ${feature.properties.Completions_Total}<h5>
+                       <h5>Year : </h5> ${feature.properties.Year}<h5>`);
     }
   });
 
