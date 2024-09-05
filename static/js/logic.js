@@ -1,4 +1,7 @@
-// Global variables to store features and chart instances
+// Initialize an empty object to store city coordinates
+let cityCoordinates = {};
+
+// Initialize global variables
 let features = [];
 let barChartStarts = null;
 let barChartCompletions = null;
@@ -6,8 +9,10 @@ let map; // Variable to hold the Leaflet map instance
 let mapMarkers = []; // Initialize the mapMarkers array
 let uniqueYears = new Set();
 let uniqueMunicipalities = new Set();
+let startedLayer = L.layerGroup();
+let completedLayer = L.layerGroup();
 
-// Initialization Function
+// Function to initialize the map
 function init() {
   let url = "https://services6.arcgis.com/ONZht79c8QWuX759/arcgis/rest/services/HousingConstructionActivity/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson";
 
@@ -17,13 +22,11 @@ function init() {
     updateCharts();
     // Call updateMap after data is loaded
     updateMap();
-    processFeatures(features);
   }).catch(error => console.error('Error fetching data:', error));
 }
 
 // Function to populate dropdowns
 function populateDropdowns(features) {
-
   features.forEach(element => {
     uniqueYears.add(element.properties.Year);
     uniqueMunicipalities.add(element.properties.Municipality);
@@ -183,66 +186,57 @@ function updateCharts() {
       }
     }
   });
-};
- // Initialize an empty object to store city coordinates
-let cityCoordinates = {};
-
-// Function to fetch coordinates for each city
-async function fetchCityCoordinates(uniqueMunicipalities) {
-  let fetchPromises = uniqueMunicipalities.map(async city => {
-    let url = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&limit=1`;
-    try {
-      let data = await d3.json(url);
-      // console.log(`API response for ${city}:`, data); // Log API response
-      if (data.length > 0) {
-        cityCoordinates[city] = {
-          lat: parseFloat(data[0].lat),
-          lon: parseFloat(data[0].lon)
-        };
-      } else {
-        console.warn(`No coordinates found for city: ${city}`);
-      }
-    } catch (error) {
-      console.error('Error fetching coordinates:', error);
-    }
-  });
-
-  await Promise.all(fetchPromises);
 }
 
-// Function to add coordinates to the JSON data
-function updateFeaturesWithCoordinates(features) {
-  features.forEach(item => {
-    let city = item.properties.Municipality;
-    if (cityCoordinates[city]) {
-      item.geometry = {
-        type: "Point",
-        coordinates: [cityCoordinates[city].lon, cityCoordinates[city].lat]
-      };
-    }
-  });
-}
 
-// Example usage
-async function processFeatures(features) {
-  let uniqueMunicipalities = [...new Set(features.map(f => f.properties.Municipality))];
-  await fetchCityCoordinates(uniqueMunicipalities);
-  updateFeaturesWithCoordinates(features);
-}
+ // Function to fetch coordinates for each city
+ async function fetchCityCoordinates(uniqueMunicipalities) {
+   let fetchPromises = uniqueMunicipalities.map(async city => {
+     let url = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&limit=1`;
+     try {
+       let data = await d3.json(url);
+       // console.log(`API response for ${city}:`, data); // Log API response
+       if (data.length > 0) {
+         cityCoordinates[city] = {
+           lat: parseFloat(data[0].lat),
+           lon: parseFloat(data[0].lon)
+         };
+       } else {
+         console.warn(`No coordinates found for city: ${city}`);
+       }
+     } catch (error) {
+       console.error('Error fetching coordinates:', error);
+     }
+   });
+ 
+   await Promise.all(fetchPromises);
+ }
+ 
+ // Function to add coordinates to the JSON data
+ function updateFeaturesWithCoordinates(features) {
+   features.forEach(item => {
+     let city = item.properties.Municipality;
+     if (cityCoordinates[city]) {
+       item.geometry = {
+         type: "Point",
+         coordinates: [cityCoordinates[city].lon, cityCoordinates[city].lat]
+       };
+     }
+   });
+ }
+ 
+ // Example usage
+ async function processFeatures(features) {
+   let uniqueMunicipalities = [...new Set(features.map(f => f.properties.Municipality))];
+   await fetchCityCoordinates(uniqueMunicipalities);
+   updateFeaturesWithCoordinates(features);
+ }
 
-processFeatures(features);
-
-function getColorBasedOnCompletion(completionTotal) {
-  // Define your color scale based on completion totals
-  if (completionTotal > 1000) return 'red';
-  if (completionTotal > 500) return 'orange';
-  return 'green';
-}
-
-function updateMap() {
+ console.log(processFeatures(features))
+ 
+ function updateMap() {
   console.log('updateMap called');
 
-  // Get the selected year from the dropdown
   let selectedYear = d3.select('#selYearMap').property('value');
 
   if (!map) {
@@ -257,57 +251,69 @@ function updateMap() {
     }).addTo(map);
   }
 
-  // Filter features based on the selected year
-  let filteredFeatures = features.filter(feature => {
-    return selectedYear === '' || String(feature.properties.Year) === String(selectedYear);
-  });
+  processFeatures(features).then(() => {
+    let filteredFeatures = features.filter(feature => {
+      return selectedYear === '' || String(feature.properties.Year) === String(selectedYear);
+    });
 
-  // Remove existing layers
-  if (map.hasLayer(mapMarkers)) {
-    map.removeLayer(mapMarkers);
-  }
-
-
-
-  function onEachFeature(feature, layer) {
-    layer.bindPopup(`<b>Municipality:</b> ${feature.properties.Municipality}<br>
-                     <b>Starts Total:</b> ${feature.properties.Starts_Total}<br>
-                     <b>Completions Total:</b> ${feature.properties.Completions_Total}`);
-  }
-
-  // Add filtered features to the map
-  mapMarkers = L.geoJSON(filteredFeatures, {
-    pointToLayer: function (feature, latlng) {
-      return L.circleMarker(latlng, styleFeature(feature));
-    },
-    onEachFeature: onEachFeature
-  }).addTo(map);
-
-  // Update legend
-  updateLegend();
-}
-
-// Function to update the legend based on color scale
-function updateLegend() {
-  let legend = L.control({position: 'bottomright'});
-
-  legend.onAdd = function () {
-    let div = L.DomUtil.create('div', 'info legend');
-    let grades = [0, 500, 1000];
-    let labels = ['< 500', '500 - 1000', '> 1000'];
-
-    for (let i = 0; i < grades.length; i++) {
-      div.innerHTML +=
-        '<i style="background:' + getColorBasedOnCompletion(grades[i] + 1) + '"></i> ' +
-        labels[i] + '<br>';
+    // Remove existing layers
+    if (map.hasLayer(startedLayer)) {
+      map.removeLayer(startedLayer);
+    }
+    if (map.hasLayer(completedLayer)) {
+      map.removeLayer(completedLayer);
     }
 
-    return div;
-  };
+   // Create the "Started" houses layer with smaller markers
+   startedLayer = L.geoJSON(filteredFeatures, {
+    pointToLayer: function (feature, latlng) {
+      let startTotal = feature.properties.Starts_Total || 0;
+      return L.circleMarker(latlng, {
+        radius: Math.sqrt(startTotal) * 0.3, // Adjust size multiplier here
+        fillColor: 'blue',
+        color: 'black',
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+      });
+      
+    },
+    onEachFeature: function (feature, layer) {
+      layer.bindPopup(`<h3>Municipality:</h3> ${feature.properties.Municipality}<h3>
+                       <h3>Starts Total:</h3> ${feature.properties.Starts_Total}<h3>`);
+    }
+  });
 
-  legend.addTo(map);
-};
+  // Create the "Completed" houses layer with smaller markers
+  completedLayer = L.geoJSON(filteredFeatures, {
+    pointToLayer: function (feature, latlng) {
+      let completionTotal = feature.properties.Completions_Total || 0;
+      return L.circleMarker(latlng, {
+        radius: Math.sqrt(completionTotal) * 0.3, // Adjust size multiplier here
+        fillColor: 'green',
+        color: 'black',
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+      });
+    },
+    onEachFeature: function (feature, layer) {
+      layer.bindPopup(`<h3>Municipality:</h3> ${feature.properties.Municipality}<h3>
+                       <h3>Completions Total:</h3> ${feature.properties.Completions_Total}<h3>`);
+    }
+  });
 
+  // Add layers to the map and set up layer control
+  startedLayer.addTo(map);
+  completedLayer.addTo(map);
+
+  // Set up layer control
+  L.control.layers(null, {
+    "Housing Starts": startedLayer,
+    "Housing Completions": completedLayer
+  }).addTo(map);
+}).catch(error => console.error('Error processing features:', error));
+}
 
 // Function to handle dropdown changes
 function optionChanged() {
