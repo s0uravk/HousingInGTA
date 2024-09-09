@@ -234,6 +234,9 @@ function updateCharts() {
 
  console.log(processFeatures(features))
  
+ let layerControl;
+
+
  function updateMap() {
   console.log('updateMap called');
 
@@ -251,16 +254,21 @@ function updateCharts() {
     }).addTo(map);
   }
 
+    // Clear both startedLayer and completedLayer before adding new markers
+    startedLayer.clearLayers();
+    completedLayer.clearLayers();
+  
+
   processFeatures(features).then(() => {
     let filteredFeatures = features.filter(feature => {
       return selectedYear === '' || String(feature.properties.Year) === String(selectedYear);
     });
 
     // Remove existing layers
-    if (map.hasLayer(startedLayer)) {
+    if (startedLayer) {
       map.removeLayer(startedLayer);
     }
-    if (map.hasLayer(completedLayer)) {
+    if (completedLayer) {
       map.removeLayer(completedLayer);
     }
 
@@ -309,11 +317,19 @@ function updateCharts() {
   startedLayer.addTo(map);
   completedLayer.addTo(map);
 
-  // Set up layer control
-  L.control.layers(null, {
-    "Housing Starts": startedLayer,
-    "Housing Completions": completedLayer
-  }).addTo(map);
+  if (!layerControl) {
+    layerControl = L.control.layers(null, {
+      "Housing Starts": startedLayer,
+      "Housing Completions": completedLayer
+    }).addTo(map);
+  } else {
+    // Update the layer control with the new layers
+    layerControl.remove();
+    layerControl = L.control.layers(null, {
+      "Housing Starts": startedLayer,
+      "Housing Completions": completedLayer
+    }).addTo(map);
+  }
 }).catch(error => console.error('Error processing features:', error));
 }
 
