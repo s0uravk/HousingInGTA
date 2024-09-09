@@ -192,7 +192,7 @@ function updateCharts() {
  // Function to fetch coordinates for each city
  async function fetchCityCoordinates(uniqueMunicipalities) {
    let fetchPromises = uniqueMunicipalities.map(async city => {
-     let url = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&limit=1`;
+     let url = `https://nominatim.openstreetmap.org/search?q=${city}, Ontario, Canada&format=json&limit=1`;
      try {
        let data = await d3.json(url);
        // console.log(`API response for ${city}:`, data); // Log API response
