@@ -11,6 +11,7 @@ let uniqueYears = new Set();
 let uniqueMunicipalities = new Set();
 let startedLayer = L.layerGroup();
 let completedLayer = L.layerGroup();
+let amenitiesLayer = L.layerGroup();
 
 // Function to initialize the map
 function init() {
@@ -22,7 +23,26 @@ function init() {
     updateCharts();
     // Call updateMap after data is loaded
     updateMap();
+    fetchAndAddAmenities();
   }).catch(error => console.error('Error fetching data:', error));
+}
+
+// Function to fetch amenities data and add them to the map
+function fetchAndAddAmenities() {
+  let amenitiesUrl = "https://overpass-api.de/api/interpreter?data=[out:json];node[park](around:50000,43.7,-79.42);out;"; // Example query to fetch amenities around GTA
+  console.log(amenitiesUrl)
+  d3.json(amenitiesUrl).then(data => {
+    data.elements.forEach(amenity => {
+      if (amenity.lat && amenity.lon && amenity.tags && amenity.tags.amenity) {
+        let latlng = [amenity.lat, amenity.lon];
+        let popupContent = `<strong>Amenity: </strong>${amenity.tags.amenity}<br><strong>Name: </strong>${amenity.tags.name || 'Unnamed'}`;
+        let marker = L.marker(latlng).bindPopup(popupContent);
+        console.log(marker)
+        amenitiesLayer.addLayer(marker); // Add marker to the amenities layer
+      }
+    });
+    amenitiesLayer.addTo(map); // Add the amenities layer to the map
+  }).catch(error => console.error('Error fetching amenities:', error));
 }
 
 // Function to populate dropdowns
