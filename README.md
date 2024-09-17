@@ -25,6 +25,9 @@ Welcome to the Real Estate Dashboard project! This web-based dashboard visualize
   - [Leaflet.js](https://leafletjs.com/): For interactive maps.
   - [Chart.js](https://www.chartjs.org/): For bar charts.
   - [OpenStreetMap API](https://nominatim.org/release-docs/develop/api/Search/): For city coordinates.
+  
+## Demo
+You can view the live deployed dashboard here: [View the deployed dashboard](https://s0uravk.github.io/HousingInGTA/)
 
 ## Setup Instructions
 
