@@ -14,7 +14,6 @@ Welcome to the Real Estate Dashboard project! This web-based dashboard visualize
 - [Usage](#usage)
 - [Future Enhancements](#future-enhancements)
 - [Contributing](#contributing)
-- [License](#license)
 
 ## Features
 
@@ -71,11 +70,3 @@ Ensure you have the following installed:
 ## Contributing
 
 Contributions are welcome! If you would like to contribute to this project, please fork the repository and submit a pull request with your changes. For major changes, please open an issue to discuss what you would like to change.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-Feel free to adjust any details as needed for your project!
