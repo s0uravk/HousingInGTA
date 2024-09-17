@@ -1,7 +1,3 @@
-Got it! Here’s an updated `README.md` without Flask:
-
----
-
 # Real Estate Dashboard
 
 Welcome to the Real Estate Dashboard project! This web-based dashboard visualizes housing construction activities across Ontario municipalities, using Leaflet.js, D3.js, and Chart.js. The application allows users to explore housing trends over the past five years with interactive maps and bar charts.
